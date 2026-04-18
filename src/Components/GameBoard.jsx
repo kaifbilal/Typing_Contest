@@ -1,51 +1,78 @@
 import { memo, useMemo } from 'react'
 
-function buildWordRenderModel(text, input) {
-    const words = text.split(' ')
-    const typedWords = input.split(' ')
-    const activeWordIndex = input.length === 0 ? 0 : typedWords.length - 1
-
+function buildWordRenderModel(words, currentInput, currentWordIndex) {
     return words.map((word, wordIndex) => {
-        const typedWord = typedWords[wordIndex] ?? ''
-        const letters = []
+        const isCompleted = wordIndex < currentWordIndex
+        const isActive = wordIndex === currentWordIndex
 
-        for (let letterIndex = 0; letterIndex < word.length; letterIndex += 1) {
-            const expectedLetter = word[letterIndex]
-            const typedLetter = typedWord[letterIndex]
-
-            let tone = 'base'
-            if (typedLetter != null) {
-                tone = typedLetter === expectedLetter ? 'correct' : 'wrong'
+        const letters = word.split('').map((letter, letterIndex) => {
+            if (isCompleted) {
+                return {
+                    id: `${wordIndex}-${letterIndex}`,
+                    value: letter,
+                    tone: 'correct',
+                }
             }
 
-            letters.push({
-                id: `${wordIndex}-${letterIndex}`,
-                value: expectedLetter,
-                tone,
-            })
-        }
+            if (isActive) {
+                const typedLetter = currentInput[letterIndex]
+                if (typedLetter == null) {
+                    return {
+                        id: `${wordIndex}-${letterIndex}`,
+                        value: letter,
+                        tone: 'base',
+                    }
+                }
 
-        if (typedWord.length > word.length) {
-            const overflow = typedWord.slice(word.length).split('')
-            overflow.forEach((char, index) => {
-                letters.push({
-                    id: `${wordIndex}-overflow-${index}`,
-                    value: char,
-                    tone: 'wrong',
-                })
-            })
-        }
+                return {
+                    id: `${wordIndex}-${letterIndex}`,
+                    value: letter,
+                    tone: typedLetter === letter ? 'correct' : 'wrong',
+                }
+            }
+
+            return {
+                id: `${wordIndex}-${letterIndex}`,
+                value: letter,
+                tone: 'base',
+            }
+        })
 
         return {
             id: `${word}-${wordIndex}`,
             letters,
-            isActive: wordIndex === activeWordIndex,
+            isActive,
         }
     })
 }
 
-function GameBoard({ snippet, input, phase, progress }) {
-    const words = useMemo(() => buildWordRenderModel(snippet.text, input), [snippet.text, input])
+function buildMarkerMap(playerMarkers, wordsLength) {
+    const markerMap = new Map()
+
+    playerMarkers.forEach((marker) => {
+        if (!Number.isFinite(marker.wordIndex)) {
+            return
+        }
+
+        const safeIndex = Math.max(0, Math.min(wordsLength > 0 ? wordsLength - 1 : 0, Math.round(marker.wordIndex)))
+        const existing = markerMap.get(safeIndex) || []
+        existing.push(marker)
+        markerMap.set(safeIndex, existing)
+    })
+
+    return markerMap
+}
+
+function GameBoard({ snippet, words, currentInput, currentWordIndex, phase, progress, accentColor, playerMarkers = [] }) {
+    const renderWords = useMemo(
+        () => buildWordRenderModel(words, currentInput, currentWordIndex),
+        [words, currentInput, currentWordIndex],
+    )
+
+    const markersByWord = useMemo(
+        () => buildMarkerMap(playerMarkers, words.length),
+        [playerMarkers, words.length],
+    )
 
     return (
         <section className="board-root">
@@ -53,7 +80,7 @@ function GameBoard({ snippet, input, phase, progress }) {
                 <h3>Snippet</h3>
                 <div className="board-presence">
                     <span>you are focused</span>
-                    <span className="presence-dot" style={{ backgroundColor: snippet.accent }} />
+                    <span className="presence-dot" style={{ backgroundColor: accentColor }} />
                 </div>
             </header>
 
@@ -62,8 +89,13 @@ function GameBoard({ snippet, input, phase, progress }) {
             </div>
 
             <div className="board-textWrap" aria-live="polite">
-                {words.map((word) => (
+                {renderWords.map((word, wordIndex) => (
                     <span key={word.id} className={`board-word ${word.isActive && phase === 'running' ? 'board-word--active' : ''}`}>
+                        {(markersByWord.get(wordIndex) || []).map((marker) => (
+                            <span key={`${marker.id}-${wordIndex}`} className="board-marker" title={marker.id} style={{ borderColor: marker.color }}>
+                                {marker.emoji}
+                            </span>
+                        ))}
                         {word.letters.map((letter) => (
                             <span key={letter.id} className={`board-letter board-letter--${letter.tone}`}>
                                 {letter.value}

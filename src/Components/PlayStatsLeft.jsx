@@ -1,6 +1,6 @@
 import { memo } from 'react'
 
-function PlayStatsLeft({ phase, profile, elapsedClock, metrics }) {
+function PlayStatsLeft({ phase, profile, elapsedClock, metrics, accentColor, contextLabel = 'Solo queue' }) {
     return (
         <aside className="stats-root">
             <article className="stats-playerCard">
@@ -19,11 +19,11 @@ function PlayStatsLeft({ phase, profile, elapsedClock, metrics }) {
                     </div>
                 </div>
 
-                <div className="stats-identity">
+                <div className="stats-identity" style={{ backgroundColor: accentColor }}>
                     <div className="stats-avatar">{profile.avatar}</div>
                     <div className="stats-user">
                         <h4>{profile.name}</h4>
-                        <p>{phase === 'running' ? 'Locked in' : 'Solo queue'}</p>
+                        <p>{phase === 'running' ? 'Locked in' : contextLabel}</p>
                     </div>
 
                     <div className="stats-wpm">

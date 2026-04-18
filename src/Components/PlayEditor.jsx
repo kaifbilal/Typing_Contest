@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 
-function PlayEditor({ phase, value, onValueChange, onNewGame }) {
+function PlayEditor({ phase, value, onValueChange, onNewGame, onConfirmWord }) {
     const inputRef = useRef(null)
 
     useEffect(() => {
@@ -11,7 +11,7 @@ function PlayEditor({ phase, value, onValueChange, onNewGame }) {
 
     const placeholder =
         phase === 'running'
-            ? 'Type here with rhythm...'
+            ? (value.length === 0 ? 'Press Space only after correct word' : '')
             : phase === 'countdown'
                 ? 'Countdown in progress'
                 : phase === 'ended'
@@ -29,6 +29,7 @@ function PlayEditor({ phase, value, onValueChange, onNewGame }) {
                     autoCorrect="off"
                     autoCapitalize="none"
                     spellCheck="false"
+                    autoComplete="off"
                     readOnly={phase !== 'running'}
                     onChange={(event) => onValueChange(event.target.value)}
                     onKeyDown={(event) => {
@@ -43,10 +44,11 @@ function PlayEditor({ phase, value, onValueChange, onNewGame }) {
                             onNewGame()
                         }
 
-                        if (phase === 'ended' && event.key === 'Enter') {
+                        if (phase === 'running' && event.key === ' ') {
                             event.preventDefault()
-                            onNewGame()
+                            onConfirmWord()
                         }
+
                     }}
                 />
             </div>

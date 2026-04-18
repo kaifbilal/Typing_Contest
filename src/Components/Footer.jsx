@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { Link } from 'react-router-dom'
 
 function Footer() {
     return (
@@ -14,9 +15,9 @@ function Footer() {
                 <div className="footer-columns">
                     <div>
                         <h4>Races</h4>
-                        <a href="#">Quick Play</a>
-                        <a href="#solo">Solo Play</a>
-                        <a href="#">Custom Play</a>
+                        <Link to="/play">Quick Play</Link>
+                        <Link to="/solo">Solo Play</Link>
+                        <Link to="/lobby">Group Play</Link>
                     </div>
 
                 </div>

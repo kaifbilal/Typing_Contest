@@ -1,17 +1,19 @@
 import { memo } from 'react'
+import { NavLink } from 'react-router-dom'
 
 function NavBar({ theme, onToggleTheme }) {
     return (
         <header className="nav-root">
             <div className="nav-container">
-                <a className="nav-logo" href="#home">
+                <NavLink className="nav-logo" to="/">
                     TYPE<span>CONTEST</span>
-                </a>
+                </NavLink>
 
                 <nav className="nav-links" aria-label="Primary navigation">
-                    <a href="#home">Play</a>
-                    <a href="#solo">Solo</a>
-                    <a href="#leaderboard">Hiscores</a>
+                    <NavLink to="/">Home</NavLink>
+                    <NavLink to="/play">Quick Play</NavLink>
+                    <NavLink to="/solo">Solo</NavLink>
+                    <NavLink to="/lobby">Group</NavLink>
                 </nav>
 
                 <button type="button" className="nav-themeButton" onClick={onToggleTheme}>
